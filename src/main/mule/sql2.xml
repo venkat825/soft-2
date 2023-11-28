@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fadfd598-b2dc-4dcb-a452-0893d9d7d194" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="4101b62e-b371-4cd6-b066-ad09485e436a" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="da572c3d-dbce-490e-aec7-4d6a979cf54e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Krishna@95" database="emp" />
+	</db:config>
+	<flow name="sql2Flow" doc:id="f42c0a36-609c-4ba3-8adf-1404637ad8a5" >
+		<http:listener doc:name="Listener" doc:id="c53ab598-6255-419a-a62d-835be7ecfba9" config-ref="HTTP_Listener_config" path="/sql1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="27b69d99-959d-4458-afc2-53ae7d1fa998" message='"data received"---#[payload]'/>
+		<http:request method="GET" doc:name="Request" doc:id="6d752fcb-d4b6-4a0a-8979-7a49a33202a5" config-ref="HTTP_Request_configuration" url="https://dummy.restapiexample.com/api/v1/employees"/>
+		<ee:transform doc:name="Transform Message" doc:id="d18bc243-6e57-422a-a0d7-4f3bb841f353">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f1016b70-e282-4229-b8dd-bbac340da37b" message='"data retrived"----&gt;#[payload]'/>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="cd480825-356b-4622-a9f9-bf2ab97b02b6" collection="#[payload.data]" maxConcurrency="2">
+			<db:insert doc:name="Insert" doc:id="1d546b50-4107-4378-a7fb-21e5e34d73c6" />
+		</parallel-foreach>
+	</flow>
+</mule>
